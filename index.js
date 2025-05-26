@@ -2,6 +2,14 @@ import * as hiveTx from 'hive-tx';
 import { savePostToDB } from './save-post.js';
 import { getLastProcessedBlock, updateLastProcessedBlock } from './last-block.js';
 import { initDB } from './init-db.js';
+
+hiveTx.config.node = [
+    'https://techcoderx.com',
+    'https://api.deathwing.me',
+    'https://api.hive.blog',
+    'https://rpc.mahdiyari.info',
+    'https://hive-api.arcange.eu'
+]
 const processBlock = async (blockNum) => {
     try {
         const res = await hiveTx.call('account_history_api.get_ops_in_block', [blockNum, false]);
