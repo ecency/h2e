@@ -4,11 +4,11 @@ import { getLastProcessedBlock, updateLastProcessedBlock } from './last-block.js
 import { initDB } from './init-db.js';
 
 hiveTx.config.node = [
+    'https://hive-api.arcange.eu',
     'https://techcoderx.com',
     'https://api.deathwing.me',
     'https://api.hive.blog',
-    'https://rpc.mahdiyari.info',
-    'https://hive-api.arcange.eu'
+    'https://rpc.mahdiyari.info'
 ]
 const processBlock = async (blockNum) => {
     try {
