@@ -30,7 +30,7 @@ async function main() {
         while (true) {
             await processBlock(Number(block));
             block = Number(block)+1;
-            await new Promise(resolve => setTimeout(resolve, 200)); // throttle to 1 block/sec
+            await new Promise(resolve => setTimeout(resolve, 10)); // throttle to 1 block/sec
         }
     }
 
