@@ -12,10 +12,22 @@ hiveTx.config.node = [
     'https://rpc.mahdiyari.info'
 ]
 
-const getHeadBlockNumber = async () => {
-    const info = await hiveTx.call('condenser_api.get_dynamic_global_properties', []);
-    return parseInt(info.result.head_block_number);
+const getHeadBlockNumber = async (retries = 5, delay = 2000) => {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+            const info = await hiveTx.call('condenser_api.get_dynamic_global_properties', []);
+            const head = parseInt(info?.result?.head_block_number);
+            if (!isNaN(head)) return head;
+            throw new Error('Invalid head_block_number');
+        } catch (err) {
+            console.error(`⚠️ Failed to get head block (attempt ${attempt}):`, err.message);
+            if (attempt === retries) throw err;
+            await new Promise(resolve => setTimeout(resolve, delay));
+        }
+    }
 }
+
+
 const processBlock = async (blockNum) => {
     try {
         const res = await hiveTx.call('account_history_api.get_ops_in_block', [blockNum, false]);
@@ -42,13 +54,18 @@ async function main() {
     } else {
         let block = await getLastProcessedBlock();
         while (true) {
-            const headBlock = await getHeadBlockNumber();
-            if (block <= headBlock) {
-                await processBlock(Number(block));
-                block = Number(block)+1;
-            } else {
-                // Wait for new block (Hive blocks ~ every 3 sec)
-                await new Promise(resolve => setTimeout(resolve, 3000));
+            try {
+                const headBlock = await getHeadBlockNumber();
+
+                if (block <= headBlock) {
+                    await processBlock(Number(block));
+                    block = Number(block)+1;
+                } else {
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+                }
+            } catch (err) {
+                console.error('❌ Fatal error in main loop:', err.message);
+                await new Promise(resolve => setTimeout(resolve, 5000)); // wait before retrying
             }
         }
     }
