@@ -5,8 +5,9 @@ import { initDB } from './init-db.js';
 
 hiveTx.config.node = [
     'https://hive-api.arcange.eu',
-    'https://techcoderx.com',
+    'https://api.openhive.network',
     'https://api.deathwing.me',
+    'https://techcoderx.com',
     'https://api.hive.blog',
     'https://rpc.mahdiyari.info'
 ]
