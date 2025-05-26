@@ -6,4 +6,4 @@
 
 ## scheme
 
-`path_index` and `__h2e_posts` tables moved into schema.sql file helper tables
+`path_index` and `__h2e_posts` tabels moved into schema.sql file helper tabels
