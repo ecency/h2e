@@ -11,6 +11,11 @@ hiveTx.config.node = [
     'https://api.hive.blog',
     'https://rpc.mahdiyari.info'
 ]
+
+const getHeadBlockNumber = async () => {
+    const info = await hiveTx.call('condenser_api.get_dynamic_global_properties', []);
+    return parseInt(info.result.head_block_number);
+}
 const processBlock = async (blockNum) => {
     try {
         const res = await hiveTx.call('account_history_api.get_ops_in_block', [blockNum, false]);
@@ -37,9 +42,14 @@ async function main() {
     } else {
         let block = await getLastProcessedBlock();
         while (true) {
-            await processBlock(Number(block));
-            block = Number(block)+1;
-            //await new Promise(resolve => setTimeout(resolve, 10)); // throttle to 1 block/sec
+            const headBlock = await getHeadBlockNumber();
+            if (block <= headBlock) {
+                await processBlock(Number(block));
+                block = Number(block)+1;
+            } else {
+                // Wait for new block (Hive blocks ~ every 3 sec)
+                await new Promise(resolve => setTimeout(resolve, 3000));
+            }
         }
     }
 
