@@ -5,7 +5,7 @@ import { initDB } from './init-db.js';
 import fs from 'fs';
 
 // PID Configuration
-const PID_PATH = '/tmp/hive-processor.pid';  // Using /tmp to avoid permission issues
+const PID_PATH = '/root/h2e/hive-processor.pid';
 
 const setupPidFile = () => {
     try {
