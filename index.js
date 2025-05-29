@@ -2,6 +2,44 @@ import * as hiveTx from 'hive-tx';
 import { savePostToDB } from './save-post.js';
 import { getLastProcessedBlock, updateLastProcessedBlock } from './last-block.js';
 import { initDB } from './init-db.js';
+import fs from 'fs';
+
+// PID Configuration
+const PID_PATH = '/tmp/hive-processor.pid';  // Using /tmp to avoid permission issues
+
+const setupPidFile = () => {
+    try {
+        // Create PID file
+        fs.writeFileSync(PID_PATH, process.pid.toString());
+        console.log(`📌 PID file created at ${PID_PATH}`);
+
+        // Cleanup function
+        const cleanup = () => {
+            try {
+                fs.unlinkSync(PID_PATH);
+                console.log('🧹 PID file removed');
+            } catch (err) {
+                if (err.code !== 'ENOENT') {  // Ignore "file not found" errors
+                    console.error('Error removing PID file:', err);
+                }
+            }
+        };
+
+        // Handle exit events
+        process.on('exit', cleanup);          // Normal exit
+        process.on('SIGINT', () => process.exit(0));  // Ctrl+C
+        process.on('SIGTERM', () => process.exit(0)); // kill command
+        process.on('uncaughtException', (err) => {
+            console.error('💥 Crash:', err);
+            cleanup();
+            process.exit(1);
+        });
+
+    } catch (err) {
+        console.error('Failed to create PID file:', err);
+        process.exit(1);
+    }
+}
 
 hiveTx.config.node = [
     'https://hive-api.arcange.eu',
@@ -47,6 +85,9 @@ const processBlock = async (blockNum) => {
 };
 
 async function main() {
+
+    setupPidFile();  // Initialize PID file first
+
     const args = process.argv.slice(2);
 
     if (args.includes('-initdb')) {
@@ -72,4 +113,7 @@ async function main() {
 
 }
 
-main().catch(console.error);
+main().catch(err => {
+    console.error('Application failed:', err);
+    process.exit(1);
+});
