@@ -82,7 +82,7 @@ const processBlock = async (blockNum) => {
                         continue;
                     }
 
-                    await savePostToDB(post.result);
+                    await savePostToDB(post);
                 } catch (postErr) {
                     console.error(`❌ Error saving post @${author}/${permlink} in block ${blockNum}: ${postErr.message}`);
                 }
