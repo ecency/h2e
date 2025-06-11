@@ -70,13 +70,19 @@ const processBlock = async (blockNum) => {
     try {
         const res = await hiveTx.call('account_history_api.get_ops_in_block', [blockNum, false]);
         const ops = res.result?.ops || [];
+
         for (const op of ops) {
             if (op.op['type'] === 'comment_operation') {
                 const { author, permlink } = op.op['value'];
-                const post = await hiveTx.call('bridge.get_post', [author, permlink]);
-                await savePostToDB(post.result);
+                try {
+                    const post = await hiveTx.call('bridge.get_post', [author, permlink]);
+                    await savePostToDB(post.result);
+                } catch (postErr) {
+                    console.error(`❌ Error saving post @${author}/${permlink} in block ${blockNum}: ${postErr.message}`);
+                }
             }
         }
+
         await updateLastProcessedBlock(blockNum);
         console.log(`✅ Processed block ${blockNum}`);
     } catch (err) {
