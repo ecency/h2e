@@ -39,6 +39,10 @@ const calculateScTrend = (rshares, createdAt) => {
 };
 
 export const savePostToDB = async (post) => {
+    if (!post || !post.id || !post.author || !post.permlink) {
+        console.warn(`Invalid or missing post data`, post);
+        return;
+    }
     const {
         id: post_id,
         author,
@@ -137,6 +141,6 @@ export const savePostToDB = async (post) => {
     );
 
 
-    const { inserted } = result.rows[0];
+    const inserted = result.rows?.[0]?.inserted ?? false;
     console.log(`Post ${post_id} ${inserted ? 'inserted' : 'updated'}: @${author}/${permlink}`);
 };
