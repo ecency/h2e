@@ -134,7 +134,7 @@ export const savePostToDB = async (post) => {
         SELECT * FROM upsert;
         `,
         [
-            post_id, author, permlink, category, depth, children, repToReadable(author_reputation),
+            post_id, author, permlink, category, depth, children, author_reputation,
             total_votes, up_votes, title, img_url, payout, pending_payout,
             promotedAmount, created, cashout_time, last_update, is_paidout, is_nsfw,
             is_declined, is_full_power, is_hidden, is_grayed, vote_rshares, abs_rshares,
