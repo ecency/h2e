@@ -73,7 +73,7 @@ const processBlock = async (blockNum) => {
         for (const op of ops) {
             if (op.op['type'] === 'comment_operation') {
                 const { author, permlink } = op.op['value'];
-                const post = await hiveTx.call('condenser_api.get_content', [author, permlink]);
+                const post = await hiveTx.call('bridge.get_post', [author, permlink]);
                 await savePostToDB(post.result);
             }
         }
