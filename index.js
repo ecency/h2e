@@ -110,7 +110,7 @@ async function main() {
             try {
                 const headBlock = await getHeadBlockNumber();
 
-                if (block <= headBlock) {
+                if (block <= headBlock-10) {
                     await processBlock(Number(block));
                     block = Number(block)+1;
                 } else {
