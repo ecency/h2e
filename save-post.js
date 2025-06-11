@@ -47,7 +47,7 @@ export const savePostToDB = async (post) => {
         id: post_id,
         author,
         permlink,
-        parent_permlink: category,
+        category,
         title,
         body,
         json_metadata,
