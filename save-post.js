@@ -105,7 +105,7 @@ export const savePostToDB = async (post) => {
                 $20, $21, $22, $23, $24, $25,
                 $26, $27, $28, $29, $30
             )
-            ON CONFLICT (post_id) DO UPDATE
+            ON CONFLICT (author, permlink) DO UPDATE
             SET
                 title = EXCLUDED.title,
                 body = EXCLUDED.body,
