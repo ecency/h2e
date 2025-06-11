@@ -75,7 +75,13 @@ const processBlock = async (blockNum) => {
             if (op.op['type'] === 'comment_operation') {
                 const { author, permlink } = op.op['value'];
                 try {
-                    const post = await hiveTx.call('bridge.get_post', [author, permlink]);
+                    const { result: post } = await hiveTx.call('bridge.get_post', [author, permlink]);
+
+                    if (!post) {
+                        console.warn(`⚠️ Post not found for @${author}/${permlink}, skipping`);
+                        continue;
+                    }
+
                     await savePostToDB(post.result);
                 } catch (postErr) {
                     console.error(`❌ Error saving post @${author}/${permlink} in block ${blockNum}: ${postErr.message}`);
