@@ -59,49 +59,43 @@ CREATE TRIGGER __trg_h2e_posts
     AFTER INSERT OR UPDATE ON hive_posts_raw
     FOR EACH ROW EXECUTE PROCEDURE __fn_h2e_posts();
 
-create table if not exists path_index
-(
-    post_id integer not null
-        constraint path_index_pkey
-            primary key,
-    path varchar not null,
-    created_at timestamp not null
-)
-;
+CREATE TABLE IF NOT EXISTS path_index (
+                                          post_id INTEGER NOT NULL,
+                                          path VARCHAR NOT NULL,
+                                          created_at TIMESTAMP NOT NULL
+);
 
-create index if not exists trgm_idx_path
-    on path_index (path)
-;
+-- Make path unique instead of post_id
+ALTER TABLE path_index
+    ADD CONSTRAINT unique_path UNIQUE (path);
 
-create index if not exists idx_path_index_created_at
-    on path_index (created_at desc)
-;
+-- Optional index for fast search
+CREATE INDEX IF NOT EXISTS idx_path_index_created_at ON path_index (created_at DESC);
+
 
 CREATE OR REPLACE FUNCTION fn_path_index_sync()
     RETURNS TRIGGER
-    LANGUAGE plpgsql
-AS $$
+    LANGUAGE plpgsql AS $$
 BEGIN
-    IF NEW.depth = 0
-    THEN
-        IF NOT EXISTS(SELECT post_id
-                      FROM path_index
-                      WHERE post_id = NEW.post_id)
-        THEN
-            INSERT INTO path_index (post_id, "path", created_at)
-            SELECT
-                ha.post_id,
-                (ha.author || '/' || ha.permlink) AS path,
-                ha.created_at
-            FROM hive_posts_raw ha
-            WHERE ha.post_id = NEW.post_id;
-        END IF;
+    -- Only handle top-level posts
+    IF NEW.depth = 0 THEN
+        INSERT INTO path_index (post_id, path, created_at)
+        VALUES (NEW.post_id, NEW.author || '/' || NEW.permlink, NEW.created_at)
+        ON CONFLICT (path) DO UPDATE
+            SET post_id = EXCLUDED.post_id,
+                created_at = EXCLUDED.created_at;
     END IF;
     RETURN NEW;
 END
 $$;
 
-create trigger "__trg_path_index" after insert on hive_posts_raw for each row execute procedure fn_path_index_sync();
+DROP TRIGGER IF EXISTS __trg_path_index ON hive_posts_raw;
+
+CREATE TRIGGER __trg_path_index
+    AFTER INSERT ON hive_posts_raw
+    FOR EACH ROW
+EXECUTE FUNCTION fn_path_index_sync();
+
 
 INSERT INTO path_index (post_id, "path", created_at)
 SELECT

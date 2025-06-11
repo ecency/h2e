@@ -61,9 +61,9 @@ export const savePostToDB = async (post) => {
     const last_update = post.updated ?? post.last_update ?? created;
     const cashout_time = post.payout_at ?? post.cashout_time ?? created;
 
-    const author_reputation = typeof post.author_reputation === 'number'
-        ? post.author_reputation * 1000000 // get_post often gives normalized rep
-        : post.author_reputation;
+    const author_reputation = typeof post.author_reputation === 'string'
+        ? repToReadable(post.author_reputation)
+        : Math.round(post.author_reputation);
 
     const active_votes = post.active_votes ?? [];
     const total_votes = active_votes.length;
