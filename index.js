@@ -42,11 +42,7 @@ const setupPidFile = () => {
 }
 
 hiveTx.config.node = [
-    'https://hive-api.arcange.eu',
-    'https://api.openhive.network',
-    'https://api.deathwing.me',
-    'https://techcoderx.com',
-    'https://rpc.mahdiyari.info'
+    'https://api.hive.blog'
 ]
 
 const getHeadBlockNumber = async (retries = 5, delay = 2000) => {
