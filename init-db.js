@@ -11,7 +11,9 @@ export const initDB = async () => {
         await query(`
             INSERT INTO last_processed_block (id, block_num)
             VALUES (1, $1)
-            ON CONFLICT (id) DO UPDATE SET block_num = EXCLUDED.block_num;
+            ON CONFLICT (id) DO UPDATE
+            SET block_num = EXCLUDED.block_num,
+                processed_at = NOW();
         `, [startBlock]);
 
         console.log(`✅ Database initialized successfully at block ${startBlock}`);

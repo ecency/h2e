@@ -28,7 +28,8 @@ CREATE TABLE IF NOT EXISTS hive_posts_raw (
   sc_trend DOUBLE PRECISION,
   body TEXT,
   votes INTEGER,
-  json JSONB
+  json JSONB,
+  CONSTRAINT hive_posts_raw_author_permlink_unique UNIQUE (author, permlink)
 );
 
 CREATE TABLE IF NOT EXISTS last_processed_block (

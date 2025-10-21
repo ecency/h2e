@@ -7,5 +7,8 @@ export const getLastProcessedBlock = async () => {
 };
 
 export const updateLastProcessedBlock = async (blockNum) => {
-    await query('UPDATE last_processed_block SET block_num = $1 WHERE id = 1', [blockNum]);
+    await query(
+        'UPDATE last_processed_block SET block_num = $1, processed_at = NOW() WHERE id = 1',
+        [blockNum],
+    );
 };
