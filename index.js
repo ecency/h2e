@@ -42,7 +42,6 @@ const setupPidFile = () => {
 }
 
 hiveTx.config.node = [
-    'https://api.hive.blog',
     'https://hive-api.arcange.eu',
     'https://api.openhive.network',
     'https://api.deathwing.me',
