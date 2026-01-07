@@ -63,31 +63,55 @@ const getHeadBlockNumber = async (retries = 5, delay = 2000) => {
 }
 
 
+const mapWithConcurrency = async (items, limit, worker) => {
+    if (items.length === 0) return [];
+    const results = new Array(items.length);
+    let currentIndex = 0;
+
+    const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
+        while (currentIndex < items.length) {
+            const index = currentIndex;
+            currentIndex += 1;
+            results[index] = await worker(items[index], index);
+        }
+    });
+
+    await Promise.all(workers);
+    return results;
+};
+
 const processBlock = async (blockNum) => {
     try {
         const res = await hiveTx.call('account_history_api.get_ops_in_block', [blockNum, false]);
         const ops = res.result?.ops || [];
+        const blockTimestamp = ops[0]?.timestamp || null;
 
-        for (const op of ops) {
-            if (op.op['type'] === 'comment_operation') {
-                const { author, permlink } = op.op['value'];
-                try {
-                    const { result: post } = await hiveTx.call('bridge.get_post', [author, permlink]);
+        const commentOps = ops
+            .filter((op) => op.op?.type === 'comment_operation')
+            .map((op) => op.op?.value)
+            .filter((value) => value?.author && value?.permlink);
 
-                    if (!post) {
-                        console.warn(`⚠️ Post not found for @${author}/${permlink}, skipping`);
-                        continue;
-                    }
+        const concurrencyLimit = Number.parseInt(process.env.POST_FETCH_CONCURRENCY ?? '5', 10);
+        const concurrency = Number.isNaN(concurrencyLimit) ? 5 : Math.max(concurrencyLimit, 1);
 
-                    await savePostToDB(post);
-                } catch (postErr) {
-                    console.error(`❌ Error saving post @${author}/${permlink} in block ${blockNum}: ${postErr.message}`);
+        await mapWithConcurrency(commentOps, concurrency, async ({ author, permlink }) => {
+            try {
+                const { result: post } = await hiveTx.call('bridge.get_post', [author, permlink]);
+
+                if (!post) {
+                    console.warn(`⚠️ Post not found for @${author}/${permlink}, skipping`);
+                    return;
                 }
+
+                await savePostToDB(post);
+            } catch (postErr) {
+                console.error(`❌ Error saving post @${author}/${permlink} in block ${blockNum}: ${postErr.message}`);
             }
-        }
+        });
 
         await updateLastProcessedBlock(blockNum);
-        console.log(`✅ Processed block ${blockNum}`);
+        const timeStr = blockTimestamp ? ` (${new Date(blockTimestamp).toISOString()})` : '';
+        console.log(`✅ Processed block ${blockNum}${timeStr}`);
     } catch (err) {
         console.error(`❌ Error processing block ${blockNum}:`, err.message);
     }
